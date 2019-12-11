@@ -10,6 +10,7 @@ import com.seckillproject.error.EmBusinessError;
 import com.seckillproject.response.CommonReturnType;
 import com.seckillproject.service.UserService;
 import com.seckillproject.service.model.UserModel;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tomcat.util.security.MD5Encoder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,25 +36,26 @@ public class UserController extends BaseController{
     @Autowired
     private HttpServletRequest httpServletRequest;//注意此处使用的httpServletRequest是单例线程安全的。
 
-
-
-    //用户获取otp短信接口
-    @RequestMapping(value = "/getotp",method = {RequestMethod.POST},consumes = {CONTENT_TYPE_FORMED})
+    //用户登录接口
+    @RequestMapping(value = "/login",method = {RequestMethod.POST},consumes = {CONTENT_TYPE_FORMED})
     @ResponseBody
-    public CommonReturnType getOtp(@RequestParam(name="telephone") String telephone){
-        //按照一定规则生成OTP验证码
-        Random random=new Random();
-        int randomInt = random.nextInt(999999);
-        String otpCode= String.valueOf(randomInt);
+    public CommonReturnType login(@RequestParam(name="telephone") String telephone,
+                                  @RequestParam(name="password") String password) throws BusinessExeption, UnsupportedEncodingException, NoSuchAlgorithmException {
+        //入参校验
+        if(org.apache.commons.lang3.StringUtils.isEmpty(telephone)||
+                StringUtils.isEmpty(password)){
+            throw new BusinessExeption(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }
+        //用户登录，校验用户登录是否合法
+        UserModel userModel = userService.validateLogin(telephone,this.EncodeByMd5(password));
 
-        //将OTP验证码与手机号关联，企业一般使用redis处理。在这里使用httpsession的方式进行绑定。
-        httpServletRequest.getSession().setAttribute(telephone,otpCode);
-
-        //将OTP验证码通过短信发送给用户。注意企业中开发不可将用户敏感信息打印到控制台，此处是为了便于测试。
-        System.out.println("telephone= "+telephone+" otpCode= "+otpCode);
+        //将登陆凭证加入到用户登录成功的session中。此处假设用户单点登录
+        this.httpServletRequest.getSession().setAttribute("IS_LOGIN",true);
+        this.httpServletRequest.getSession().setAttribute("LOGIN_USER",userModel);
 
         return CommonReturnType.create(null);
     }
+
 
     //用户注册接口
     @RequestMapping(value = "/register",method = {RequestMethod.POST},consumes = {CONTENT_TYPE_FORMED})
@@ -66,7 +68,7 @@ public class UserController extends BaseController{
                                      @RequestParam(name="password") String password) throws BusinessExeption, UnsupportedEncodingException, NoSuchAlgorithmException {
         //验证手机号和对应的otpCode相符
         String inSessionOtpCode= (String) this.httpServletRequest.getSession().getAttribute(telephone);
-            //自带判空处理
+        //自带判空处理
         if(!com.alibaba.druid.util.StringUtils.equals(otpCode,inSessionOtpCode)){
             throw new BusinessExeption(EmBusinessError.PARAMETER_VALIDATION_ERROR,"短信验证码错误");
         }
@@ -93,6 +95,23 @@ public class UserController extends BaseController{
     }
 
 
+    //用户获取otp短信接口
+    @RequestMapping(value = "/getotp",method = {RequestMethod.POST},consumes = {CONTENT_TYPE_FORMED})
+    @ResponseBody
+    public CommonReturnType getOtp(@RequestParam(name="telephone") String telephone){
+        //按照一定规则生成OTP验证码
+        Random random=new Random();
+        int randomInt = random.nextInt(999999);
+        String otpCode= String.valueOf(randomInt);
+
+        //将OTP验证码与手机号关联，企业一般使用redis处理。在这里使用httpsession的方式进行绑定。
+        httpServletRequest.getSession().setAttribute(telephone,otpCode);
+
+        //将OTP验证码通过短信发送给用户。注意企业中开发不可将用户敏感信息打印到控制台，此处是为了便于测试。
+        System.out.println("telephone= "+telephone+" otpCode= "+otpCode);
+
+        return CommonReturnType.create(null);
+    }
 
     @RequestMapping("/get")
     @ResponseBody

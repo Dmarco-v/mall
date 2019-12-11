@@ -89,8 +89,8 @@
     </configuration>
     <list>
       <item itemvalue="Application.App" />
-      <item itemvalue="Maven.seckill [mybatis-generator:generate]" />
       <item itemvalue="Application.Test" />
+      <item itemvalue="Maven.seckill [mybatis-generator:generate]" />
     </list>
     <recent_temporary>
       <list>
@@ -109,7 +109,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1574859879278</updated>
-      <workItem from="1574859882624" duration="53776000" />
+      <workItem from="1574859882624" duration="54067000" />
+      <workItem from="1576044430041" duration="12479000" />
     </task>
     <servers />
   </component>

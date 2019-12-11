@@ -8,6 +8,8 @@ import com.seckillproject.error.BusinessExeption;
 import com.seckillproject.error.EmBusinessError;
 import com.seckillproject.service.UserService;
 import com.seckillproject.service.model.UserModel;
+import com.seckillproject.validator.ValidationResult;
+import com.seckillproject.validator.ValidatorImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,8 @@ public class UserServiceImpl implements UserService {
     private UserDOMapper userDOMapper;
     @Autowired
     private UserPasswordDOMapper userPasswordDOMapper;
+    @Autowired
+    private ValidatorImpl validator;
 
     @Override
     public UserModel getUserById(Integer id) {
@@ -42,12 +46,18 @@ public class UserServiceImpl implements UserService {
         if(userModel==null){
             throw new BusinessExeption(EmBusinessError.PARAMETER_VALIDATION_ERROR);
         }
-        if(StringUtils.isEmpty(userModel.getName())
+/*        if(StringUtils.isEmpty(userModel.getName())
                 ||userModel.getGender()==null
                 ||userModel.getAge()==null
                 ||StringUtils.isEmpty(userModel.getTelephone())){
             throw new BusinessExeption(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }*/
+        //使用通用校验
+        ValidationResult result=validator.validate(userModel);
+        if(result.hasError){
+            throw new BusinessExeption(EmBusinessError.PARAMETER_VALIDATION_ERROR,result.getErrMsg());
         }
+
         UserDO userDO=convertFromModel(userModel);
         try{
             userDOMapper.insertSelective(userDO);
@@ -59,6 +69,23 @@ public class UserServiceImpl implements UserService {
         userPasswordDOMapper.insertSelective(userPasswordDO);
 
         return ;
+    }
+
+    @Override
+    public UserModel validateLogin(String telephone, String encrptPassword) throws BusinessExeption {
+        //通过手机获取用户信息
+        UserDO userDO=userDOMapper.selectByTelephone(telephone);
+        if(userDO==null){
+            throw new BusinessExeption(EmBusinessError.USER_LOGIN_FAIL);
+        }
+        UserPasswordDO userPasswordDO=userPasswordDOMapper.selectByUserId(userDO.getId());
+        UserModel userModel=convertFromDataObject(userDO,userPasswordDO);
+
+        //校验密码是否一致
+        if(!StringUtils.equals(encrptPassword,userModel.getEncrptPassword())){
+            throw new BusinessExeption(EmBusinessError.USER_LOGIN_FAIL);
+        }
+        return userModel;
     }
 
     private UserPasswordDO convertPasswordFromModel(UserModel userModel,UserDO userDO){
