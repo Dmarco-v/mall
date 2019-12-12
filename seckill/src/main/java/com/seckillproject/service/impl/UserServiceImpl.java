@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
         }*/
         //使用通用校验
         ValidationResult result=validator.validate(userModel);
-        if(result.hasError){
+        if(result.isHasError()){
             throw new BusinessExeption(EmBusinessError.PARAMETER_VALIDATION_ERROR,result.getErrMsg());
         }
 
