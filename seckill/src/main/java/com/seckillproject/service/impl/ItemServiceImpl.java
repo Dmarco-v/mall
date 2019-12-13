@@ -96,6 +96,9 @@ public class ItemServiceImpl implements ItemService {
         
         return itemModel;
     }
+
+
+
     private ItemModel convertModelFromDataObject(ItemDO itemDO,ItemStockDO itemStockDO){
         ItemModel itemModel=new ItemModel();
         BeanUtils.copyProperties(itemDO,itemModel);
@@ -104,5 +107,22 @@ public class ItemServiceImpl implements ItemService {
         return itemModel;
     }
 
+    @Override
+    @Transactional
+    public boolean decreaseStock(Integer itemId,Integer amount) {
+        //两种方式：1.先查询stock，做比较，再更新；2.直接用where语句判断。
+        //第2种性能更好
+        int affectedRow=itemStockDOMapper.decreaseStock(itemId,amount);
+        if(affectedRow>0){
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    @Transactional
+    public void increaseSales(Integer itemId, Integer amount) throws BusinessExeption {
+        itemDOMapper.increaseSales(itemId,amount);
+    }
 
 }

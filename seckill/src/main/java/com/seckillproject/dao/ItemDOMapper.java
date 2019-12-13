@@ -1,6 +1,7 @@
 package com.seckillproject.dao;
 
 import com.seckillproject.dataObject.ItemDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -54,4 +55,6 @@ public interface ItemDOMapper {
      * @mbg.generated Thu Dec 12 11:11:35 CST 2019
      */
     int updateByPrimaryKey(ItemDO record);
+
+    void increaseSales(@Param("id") Integer id,@Param("amount") Integer amount);
 }
