@@ -7,7 +7,9 @@ import com.seckillproject.dataObject.ItemStockDO;
 import com.seckillproject.error.BusinessExeption;
 import com.seckillproject.error.EmBusinessError;
 import com.seckillproject.service.ItemService;
+import com.seckillproject.service.PromoService;
 import com.seckillproject.service.model.ItemModel;
+import com.seckillproject.service.model.PromoModel;
 import com.seckillproject.validator.ValidationResult;
 import com.seckillproject.validator.ValidatorImpl;
 import org.springframework.beans.BeanUtils;
@@ -29,6 +31,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Autowired
     private ValidatorImpl validator;
+
+    @Autowired
+    private PromoService promoService;
 
     @Override
     @Transactional
@@ -86,14 +91,21 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemModel getItemById(Integer id) {
+        //获取商品信息
         ItemDO itemDO=itemDOMapper.selectByPrimaryKey(id);
         if(itemDO==null){
             return null;
         }
+        //获取库存信息
         ItemStockDO itemStockDO=itemStockDOMapper.selectByItemId(itemDO.getId());
 
         ItemModel itemModel=convertModelFromDataObject(itemDO,itemStockDO);
-        
+
+        //获取活动商品信息
+        PromoModel promoModel=promoService.getPromoByItemId(itemModel.getId());
+        if(promoModel !=null && promoModel.getStatus() !=3){
+            itemModel.setPromoModel(promoModel);
+        }
         return itemModel;
     }
 

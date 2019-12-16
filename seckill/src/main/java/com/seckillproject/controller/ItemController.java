@@ -5,6 +5,8 @@ import com.seckillproject.error.BusinessExeption;
 import com.seckillproject.response.CommonReturnType;
 import com.seckillproject.service.ItemService;
 import com.seckillproject.service.model.ItemModel;
+import com.seckillproject.service.model.PromoModel;
+import org.joda.time.format.DateTimeFormat;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -73,6 +75,17 @@ public class ItemController extends BaseController {
         }
         ItemVO itemVO=new ItemVO();
         BeanUtils.copyProperties(itemModel,itemVO);
+        //判断有没有秒杀活动
+        PromoModel promoModel=itemModel.getPromoModel();
+        if(promoModel!=null){
+            itemVO.setPromoStatus(promoModel.getStatus());
+            itemVO.setPromoId(promoModel.getId());
+            itemVO.setStartDate(promoModel.getStartDate().toString(DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")));
+            itemVO.setPromoPrice(promoModel.getPromoItemPrice());
+        }else{
+            itemVO.setPromoStatus(0);
+        }
+
         return itemVO;
     }
 }
