@@ -11,7 +11,7 @@ SpringBoot前后端分离基础电商项目
 - 后台SpringBoot+MyBatis
 - 数据库MySQL
 
-亮点：
+代码优化：
 
 - 设计通用错误提示信息，提高代码重用性。
 
